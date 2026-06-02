@@ -20,7 +20,13 @@ class Settings(BaseSettings):
 
     @property
     def cors_origins(self) -> List[str]:
-        return [origin.strip() for origin in self.ALLOWED_ORIGINS.split(",") if origin.strip()]
+        origins = [origin.strip() for origin in self.ALLOWED_ORIGINS.split(",") if origin.strip()]
+        # Force these defaults to ALWAYS be allowed
+        defaults = ["http://localhost:3000", "http://localhost:5173", "https://ethara-self-five.vercel.app"]
+        for d in defaults:
+            if d not in origins:
+                origins.append(d)
+        return origins
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
