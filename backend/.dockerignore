@@ -18,5 +18,5 @@ coverage.xml
 *.log
 .pytest_cache/
 tests/
-alembic.ini
+
 .env
