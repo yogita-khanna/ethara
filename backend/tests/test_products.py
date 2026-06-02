@@ -59,9 +59,9 @@ async def test_get_all_products_pagination(client: AsyncClient, create_product):
 
 async def test_get_product_by_id_success(client: AsyncClient, create_product):
     product = await create_product()
-    response = await client.get(f"{settings.API_PREFIX}/products/{product.id}")
+    response = await client.get(f"{settings.API_PREFIX}/products/{product.uid}")
     assert response.status_code == 200
-    assert response.json()["id"] == product.id
+    assert response.json()["uid"] == product.uid
 
 async def test_get_product_by_id_not_found(client: AsyncClient):
     response = await client.get(f"{settings.API_PREFIX}/products/999")
@@ -70,7 +70,7 @@ async def test_get_product_by_id_not_found(client: AsyncClient):
 async def test_update_product_success(client: AsyncClient, create_product):
     product = await create_product()
     payload = {"price": 99.99}
-    response = await client.put(f"{settings.API_PREFIX}/products/{product.id}", json=payload)
+    response = await client.put(f"{settings.API_PREFIX}/products/{product.uid}", json=payload)
     assert response.status_code == 200
     assert response.json()["price"] == 99.99
 
@@ -78,7 +78,7 @@ async def test_update_product_duplicate_sku(client: AsyncClient, create_product)
     await create_product(sku="EXISTING-SKU")
     product2 = await create_product(sku="OTHER-SKU")
     payload = {"sku": "EXISTING-SKU"}
-    response = await client.put(f"{settings.API_PREFIX}/products/{product2.id}", json=payload)
+    response = await client.put(f"{settings.API_PREFIX}/products/{product2.uid}", json=payload)
     assert response.status_code == 409
 
 async def test_update_product_not_found(client: AsyncClient):
@@ -87,10 +87,10 @@ async def test_update_product_not_found(client: AsyncClient):
 
 async def test_delete_product_success(client: AsyncClient, create_product):
     product = await create_product()
-    response = await client.delete(f"{settings.API_PREFIX}/products/{product.id}")
+    response = await client.delete(f"{settings.API_PREFIX}/products/{product.uid}")
     assert response.status_code == 204
     # Verify it's gone
-    resp2 = await client.get(f"{settings.API_PREFIX}/products/{product.id}")
+    resp2 = await client.get(f"{settings.API_PREFIX}/products/{product.uid}")
     assert resp2.status_code == 404
 
 async def test_delete_product_not_found(client: AsyncClient):
@@ -109,5 +109,5 @@ async def test_delete_product_referenced_in_order(client: AsyncClient, create_pr
     db.add(item)
     await db.commit()
     
-    response = await client.delete(f"{settings.API_PREFIX}/products/{product.id}")
+    response = await client.delete(f"{settings.API_PREFIX}/products/{product.uid}")
     assert response.status_code == 409

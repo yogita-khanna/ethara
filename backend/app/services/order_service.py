@@ -16,69 +16,73 @@ class OrderService:
 
     async def create_order(self, order_in: OrderCreate) -> Order:
         # ATOMIC transaction implicitly managed by SQLAlchemy
-        # 1. Load customer by uid
-        stmt_cust = select(Customer).filter(Customer.uid == order_in.customer_uid)
-        result_cust = await self.db.execute(stmt_cust)
-        customer = result_cust.scalar_one_or_none()
-        if not customer:
-            raise NotFoundError(resource="Customer", resource_id=order_in.customer_uid)
-
-        # Create Order first to attach items
-        new_order = Order(
-            customer_id=customer.id,
-            notes=order_in.notes,
-            status=OrderStatus.pending,
-            total_amount=0
-        )
-        self.db.add(new_order)
-        # Flush to get the order ID
-        await self.db.flush()
-
-        total_amount = 0.0
-
-        for item_in in order_in.items:
-            # 2. Load product by uid
-            stmt_prod = select(Product).filter(Product.uid == item_in.product_uid).with_for_update()
-            result_prod = await self.db.execute(stmt_prod)
-            product = result_prod.scalar_one_or_none()
-
-            if not product:
-                raise NotFoundError(resource="Product", resource_id=item_in.product_uid)
-
-            # 3. Check stock
-            if product.quantity < item_in.quantity:
-                raise InsufficientStockError(
-                    product_id=product.id,
-                    available=product.quantity,
-                    requested=item_in.quantity
-                )
-
-            # 4. Deduct stock
-            product.quantity -= item_in.quantity
-
-            # 5. Snapshot unit_price
-            unit_price = product.price
-
-            # 6. Compute subtotal
-            subtotal = unit_price * item_in.quantity
-            total_amount += float(subtotal)
-
-            # Create OrderItem
-            order_item = OrderItem(
-                order_id=new_order.id,
-                product_id=product.id,
-                quantity=item_in.quantity,
-                unit_price=unit_price,
-                subtotal=subtotal
+        try:
+            # 1. Load customer by uid
+            stmt_cust = select(Customer).filter(Customer.uid == order_in.customer_uid)
+            result_cust = await self.db.execute(stmt_cust)
+            customer = result_cust.scalar_one_or_none()
+            if not customer:
+                raise NotFoundError(resource="Customer", resource_id=order_in.customer_uid)
+    
+            # Create Order first to attach items
+            new_order = Order(
+                customer_id=customer.id,
+                notes=order_in.notes,
+                status=OrderStatus.pending,
+                total_amount=0
             )
-            self.db.add(order_item)
-
-        new_order.total_amount = total_amount
-        await self.db.commit()
-        await self.db.refresh(new_order)
-        
-        # Load relationships for response
-        return await self.get_order(new_order.uid)
+            self.db.add(new_order)
+            # Flush to get the order ID
+            await self.db.flush()
+    
+            total_amount = 0.0
+    
+            for item_in in order_in.items:
+                # 2. Load product by uid
+                stmt_prod = select(Product).filter(Product.uid == item_in.product_uid).with_for_update()
+                result_prod = await self.db.execute(stmt_prod)
+                product = result_prod.scalar_one_or_none()
+    
+                if not product:
+                    raise NotFoundError(resource="Product", resource_id=item_in.product_uid)
+    
+                # 3. Check stock
+                if product.quantity < item_in.quantity:
+                    raise InsufficientStockError(
+                        product_id=product.id,
+                        available=product.quantity,
+                        requested=item_in.quantity
+                    )
+    
+                # 4. Deduct stock
+                product.quantity -= item_in.quantity
+    
+                # 5. Snapshot unit_price
+                unit_price = product.price
+    
+                # 6. Compute subtotal
+                subtotal = unit_price * item_in.quantity
+                total_amount += float(subtotal)
+    
+                # Create OrderItem
+                order_item = OrderItem(
+                    order_id=new_order.id,
+                    product_id=product.id,
+                    quantity=item_in.quantity,
+                    unit_price=unit_price,
+                    subtotal=subtotal
+                )
+                self.db.add(order_item)
+    
+            new_order.total_amount = total_amount
+            await self.db.commit()
+            await self.db.refresh(new_order)
+            
+            # Load relationships for response
+            return await self.get_order(new_order.uid)
+        except Exception:
+            await self.db.rollback()
+            raise
 
     async def get_orders(self, skip: int = 0, limit: int = 20, status: Optional[OrderStatus] = None) -> List[Order]:
         stmt = select(Order).options(selectinload(Order.customer))

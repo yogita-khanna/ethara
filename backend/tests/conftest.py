@@ -20,7 +20,7 @@ TestingSessionLocal = async_sessionmaker(engine, class_=AsyncSession, expire_on_
 
 fake = Faker()
 
-@pytest_asyncio.fixture(scope="session")
+@pytest_asyncio.fixture(scope="function")
 async def setup_db():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)

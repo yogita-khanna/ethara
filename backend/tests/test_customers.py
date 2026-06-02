@@ -40,7 +40,7 @@ async def test_get_all_customers_pagination(client: AsyncClient, create_customer
 
 async def test_get_customer_by_id(client: AsyncClient, create_customer):
     customer = await create_customer()
-    response = await client.get(f"{settings.API_PREFIX}/customers/{customer.id}")
+    response = await client.get(f"{settings.API_PREFIX}/customers/{customer.uid}")
     assert response.status_code == 200
     
     response = await client.get(f"{settings.API_PREFIX}/customers/999")
@@ -48,7 +48,7 @@ async def test_get_customer_by_id(client: AsyncClient, create_customer):
 
 async def test_delete_customer_success(client: AsyncClient, create_customer):
     customer = await create_customer()
-    response = await client.delete(f"{settings.API_PREFIX}/customers/{customer.id}")
+    response = await client.delete(f"{settings.API_PREFIX}/customers/{customer.uid}")
     assert response.status_code == 204
     
 async def test_delete_customer_has_active_orders(client: AsyncClient, create_customer, db):
@@ -58,5 +58,5 @@ async def test_delete_customer_has_active_orders(client: AsyncClient, create_cus
     db.add(order)
     await db.commit()
     
-    response = await client.delete(f"{settings.API_PREFIX}/customers/{customer.id}")
+    response = await client.delete(f"{settings.API_PREFIX}/customers/{customer.uid}")
     assert response.status_code == 409
