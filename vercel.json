@@ -3,6 +3,6 @@
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "env": {
-    "VITE_API_URL": "https://your-render-backend.onrender.com/api/v1"
+    "VITE_API_URL": "https://ethara-9vxr.onrender.com/api/v1"
   }
 }
