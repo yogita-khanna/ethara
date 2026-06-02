@@ -10,11 +10,16 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
 
 RUN adduser --disabled-password --no-create-home appuser
 USER appuser
 
 EXPOSE 8000
 
-# Run migrations then start server
-CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
+# Copy Alembic config
+COPY alembic.ini /app/alembic.ini
+
+# Use entrypoint script to run migrations then start server
+ENTRYPOINT ["sh", "/app/entrypoint.sh"]
