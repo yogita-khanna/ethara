@@ -41,6 +41,18 @@ When starting the server locally via Docker Compose, the following ports are map
 - **API Swagger Documentation**: `http://localhost:8000/api/docs`
 - **PostgreSQL Database**: `localhost:5432` (Internal Container Port: `5432`)
 
+### 📦 Running the Pre-built Docker Hub Image
+
+Instead of building locally, you can pull and run the backend image directly from Docker Hub:
+
+```bash
+# Pull the latest image
+docker pull yogitakhanna/inventory-backend:latest
+
+# Run the image (ensure your database environment variables are configured)
+docker run -d -p 8000:8000 --env-file .env yogitakhanna/inventory-backend:latest
+```
+
 ---
 
 ## 💻 Local Setup Instructions
