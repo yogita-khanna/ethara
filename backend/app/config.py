@@ -15,7 +15,7 @@ class Settings(BaseSettings):
         return v
     SYNC_DATABASE_URL: str
     ENVIRONMENT: str = "development"
-    ALLOWED_ORIGINS: str = ""
+    ALLOWED_ORIGINS: str = "http://localhost:3000,http://localhost:5173,https://ethara-self-five.vercel.app"
     API_PREFIX: str = "/api/v1"
 
     @property
