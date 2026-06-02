@@ -18,8 +18,6 @@ USER appuser
 
 EXPOSE 8000
 
-# Copy Alembic config
-COPY alembic.ini /app/alembic.ini
 
 # Use entrypoint script to run migrations then start server
 ENTRYPOINT ["sh", "/app/entrypoint.sh"]
