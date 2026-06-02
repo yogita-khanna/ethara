@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: inventory-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: SYNC_DATABASE_URL
+        sync: false
+      - key: ENVIRONMENT
+        value: production
+      - key: ALLOWED_ORIGINS
+        sync: false
+
+databases:
+  - name: inventory-postgres
+    plan: free
+    databaseName: inventory_db
